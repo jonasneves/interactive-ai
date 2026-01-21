@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import HandBackground from './components/HandBackground';
-import CourseTrack, { COURSES } from './components/CourseTrack';
+import CourseTrack, { COURSES, BrainIcon, EyeIcon, GamepadIcon } from './components/CourseTrack';
 import auth from '../shared/auth.js';
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
@@ -83,7 +83,7 @@ function UserMenu({ user, onLogout }) {
   );
 }
 
-function Card({ href, icon, title, description, isHovered, cardRef }) {
+function Card({ href, Icon, title, description, isHovered, cardRef }) {
   return (
     <a
       ref={cardRef}
@@ -124,12 +124,20 @@ function Card({ href, icon, title, description, isHovered, cardRef }) {
       }}
     >
       <div style={{
-        fontSize: '2rem',
-        marginBottom: '0.75rem',
-        transition: 'transform 0.3s',
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        background: isHovered
+          ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3))'
+          : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '1rem',
+        transition: 'all 0.3s',
         transform: isHovered ? 'scale(1.1)' : 'scale(1)'
       }}>
-        {icon}
+        <Icon size={22} color={isHovered ? '#a5b4fc' : '#94a3b8'} />
       </div>
       <div style={{
         fontSize: '1.125rem',
@@ -278,21 +286,21 @@ export default function App() {
     {
       id: './neural-networks/',
       href: './neural-networks/',
-      icon: '🧠',
+      Icon: BrainIcon,
       title: 'Neural Networks',
       description: 'Backpropagation, activation functions, and gradient descent visualized.'
     },
     {
       id: './convolutional-networks/',
       href: './convolutional-networks/',
-      icon: '👁️',
+      Icon: EyeIcon,
       title: 'CNNs',
       description: 'Convolutions, kernels, pooling, and architectures explained.'
     },
     {
       id: './reinforcement-learning/',
       href: './reinforcement-learning/',
-      icon: '🎮',
+      Icon: GamepadIcon,
       title: 'Reinforcement Learning',
       description: 'MDPs, value functions, Q-learning, and policy gradients.'
     }
@@ -303,12 +311,12 @@ export default function App() {
       minHeight: '100vh',
       backgroundColor: '#0f172a',
       backgroundImage: `
-        radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
-        radial-gradient(at 80% 20%, rgba(139, 92, 246, 0.06) 0px, transparent 50%),
-        radial-gradient(at 40% 80%, rgba(6, 182, 212, 0.04) 0px, transparent 50%),
-        radial-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px)
+        radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 80% 20%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 40% 80%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px)
       `,
-      backgroundSize: '100% 100%, 100% 100%, 100% 100%, 24px 24px'
+      backgroundSize: '100% 100%, 100% 100%, 100% 100%, 20px 20px'
     }}>
       <HandBackground
         enabled={handTrackingEnabled}
@@ -493,7 +501,7 @@ export default function App() {
               key={card.id}
               cardRef={el => cardRefs.current[card.id] = el}
               href={card.href}
-              icon={card.icon}
+              Icon={card.Icon}
               title={card.title}
               description={card.description}
               isHovered={handTrackingEnabled && hoveredCard === card.id}

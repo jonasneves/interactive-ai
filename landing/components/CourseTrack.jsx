@@ -1,9 +1,36 @@
 import { useRef, useState, useEffect } from 'react';
 
+// Lucide-style icons
+const BrainIcon = ({ size = 18, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
+    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
+    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
+    <path d="M12 18v4"/>
+  </svg>
+);
+
+const EyeIcon = ({ size = 18, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const GamepadIcon = ({ size = 18, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="6" x2="10" y1="12" y2="12"/>
+    <line x1="8" x2="8" y1="10" y2="14"/>
+    <line x1="15" x2="15.01" y1="13" y2="13"/>
+    <line x1="18" x2="18.01" y1="11" y2="11"/>
+    <rect width="20" height="12" x="2" y="6" rx="2"/>
+  </svg>
+);
+
 const COURSES = [
-  { id: 'neural-networks', label: 'Neural Networks', href: './neural-networks/', icon: '🧠' },
-  { id: 'convolutional-networks', label: 'CNNs', href: './convolutional-networks/', icon: '👁️' },
-  { id: 'reinforcement-learning', label: 'RL', href: './reinforcement-learning/', icon: '🎮' }
+  { id: 'neural-networks', label: 'Neural Networks', href: './neural-networks/', Icon: BrainIcon },
+  { id: 'convolutional-networks', label: 'CNNs', href: './convolutional-networks/', Icon: EyeIcon },
+  { id: 'reinforcement-learning', label: 'RL', href: './reinforcement-learning/', Icon: GamepadIcon }
 ];
 
 export default function CourseTrack({ activeCourse, onCourseChange, onCourseSelect }) {
@@ -80,36 +107,39 @@ export default function CourseTrack({ activeCourse, onCourseChange, onCourseSele
         }}
       />
 
-      {COURSES.map((course, index) => (
-        <button
-          key={course.id}
-          ref={el => buttonRefs.current[index] = el}
-          onClick={() => onCourseSelect?.(course)}
-          onMouseEnter={() => onCourseChange?.(course.id)}
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.625rem 1rem',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            color: activeCourse === course.id ? '#fff' : '#94a3b8',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            transition: 'color 0.2s',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <span style={{ fontSize: '1.125rem' }}>{course.icon}</span>
-          <span>{course.label}</span>
-        </button>
-      ))}
+      {COURSES.map((course, index) => {
+        const isActive = activeCourse === course.id;
+        return (
+          <button
+            key={course.id}
+            ref={el => buttonRefs.current[index] = el}
+            onClick={() => onCourseSelect?.(course)}
+            onMouseEnter={() => onCourseChange?.(course.id)}
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1rem',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              color: isActive ? '#fff' : '#94a3b8',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              transition: 'color 0.2s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <course.Icon size={16} color={isActive ? '#fff' : '#94a3b8'} />
+            <span>{course.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-export { COURSES };
+export { COURSES, BrainIcon, EyeIcon, GamepadIcon };
