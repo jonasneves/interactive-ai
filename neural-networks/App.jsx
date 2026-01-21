@@ -10,6 +10,11 @@ import ActivationFunctionPlayground from './tier1/activation-playground';
 import LossLandscapeNavigator from './tier1/loss-landscape';
 import BackpropFlowViz from './backprop-flow';
 
+// Import Tier 2 modules
+import LearningRateLab from './tier2/learning-rate-lab';
+import BatchVsSGD from './tier2/batch-vs-sgd';
+import OptimizerZoo from './tier2/optimizer-zoo';
+
 const App = () => {
   const [activeModule, setActiveModule] = useState(null);
 
@@ -56,24 +61,24 @@ const App = () => {
           name: 'Learning Rate Lab',
           description: 'See why learning rate choice matters',
           icon: TrendingDown,
-          status: 'coming',
-          component: null,
+          status: 'complete',
+          component: LearningRateLab,
         },
         {
           id: 'sgd',
           name: 'Batch vs SGD Visualizer',
           description: 'Compare gradient descent variants',
           icon: Layers,
-          status: 'coming',
-          component: null,
+          status: 'complete',
+          component: BatchVsSGD,
         },
         {
           id: 'optimizer',
           name: 'Optimizer Zoo',
           description: 'Understand momentum, RMSprop, Adam',
           icon: GitBranch,
-          status: 'coming',
-          component: null,
+          status: 'complete',
+          component: OptimizerZoo,
         },
       ],
     },
@@ -218,7 +223,7 @@ const App = () => {
         <div className="mt-16 pt-8 border-t border-slate-800 text-center">
           <p className="text-slate-500 text-sm">
             Open source educational project •{' '}
-            <span className="text-slate-400">12 interactive visualizations planned</span>
+            <span className="text-slate-400">7 interactive visualizations complete</span>
           </p>
           <p className="text-slate-600 text-xs mt-2">
             Run <code className="bg-slate-800 px-2 py-1 rounded">make help</code> for available commands

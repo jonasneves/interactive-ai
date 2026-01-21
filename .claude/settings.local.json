@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:oauth.oit.duke.edu)",
+      "WebFetch(domain:authentication.oit.duke.edu)",
+      "WebFetch(domain:security.duke.edu)",
+      "Bash(ls:*)",
+      "Bash(gh api:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(npm run build:*)",
+      "Bash(make build:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:landing:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(git reset:*)"
+    ]
+  }
+}

@@ -4,18 +4,21 @@
   "description": "Interactive educational visualizations for understanding AI concepts",
   "private": true,
   "workspaces": [
+    "landing",
     "neural-networks",
     "convolutional-networks",
     "reinforcement-learning"
   ],
   "scripts": {
+    "dev:landing": "npm run dev --workspace=landing",
     "dev:nn": "npm run dev --workspace=neural-networks",
     "dev:cnn": "npm run dev --workspace=convolutional-networks",
     "dev:rl": "npm run dev --workspace=reinforcement-learning",
+    "build:landing": "npm run build --workspace=landing",
     "build:nn": "npm run build --workspace=neural-networks",
     "build:cnn": "npm run build --workspace=convolutional-networks",
     "build:rl": "npm run build --workspace=reinforcement-learning",
-    "build:all": "npm run build:nn && npm run build:cnn && npm run build:rl",
+    "build:all": "npm run build:landing && npm run build:nn && npm run build:cnn && npm run build:rl",
     "install:all": "npm install"
   },
   "keywords": [
