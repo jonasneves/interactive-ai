@@ -18,7 +18,18 @@
       "mcp__ide__getDiagnostics",
       "Bash(git reset:*)",
       "Bash(tree:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run build:all:*)",
+      "Bash(npm run build:nn:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:lucide.dev)",
+      "Bash(xargs:*)",
+      "Bash(make build-landing:*)",
+      "Bash(make help:*)",
+      "Bash(git status:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git remote remove:*)"
     ]
   }
 }

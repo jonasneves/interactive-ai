@@ -16,6 +16,9 @@ const CURSOR_SMOOTHING = 0.4;
 const DWELL_TIME = 1200;
 const DWELL_THRESHOLD = 0.05;
 const CURSOR_SIZE = 24;
+const SCROLL_MULTIPLIER = 1800;
+const SCROLL_VELOCITY_THRESHOLD = 0.006;
+const SCROLL_RESET_THRESHOLD = 0.02;
 
 export default function HandBackground({ enabled = false, onHandPosition, onGesture, onDwellClick }) {
   const videoRef = useRef(null);
@@ -42,6 +45,13 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
     lastGesture: null
   });
 
+  // Scroll state for closed fist drag (velocity-based like serverless-llm)
+  const scrollStateRef = useRef({
+    lastY: null,
+    isScrolling: false,
+    velocity: 0
+  });
+
   // Update refs when props change
   useEffect(() => {
     onHandPositionRef.current = onHandPosition;
@@ -56,7 +66,6 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
 
     async function start() {
       try {
-        console.log('[Hand] Loading MediaPipe...');
         const vision = await FilesetResolver.forVisionTasks(
           'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
         );
@@ -78,7 +87,6 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
         }
 
         recognizerRef.current = recognizer;
-        console.log('[Hand] Recognizer ready');
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
 
@@ -93,7 +101,6 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
         video.srcObject = stream;
         await video.play();
 
-        console.log('[Hand] Camera started');
         lastTimeRef.current = -1;
 
         function draw() {
@@ -132,8 +139,9 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
 
           ctx.clearRect(0, 0, w, h);
 
-          // Hide cursor by default
+          // Cursor state
           let isPointing = false;
+          let isScrolling = false;
           let dwellProgress = 0;
 
           if (result?.landmarks?.length) {
@@ -156,6 +164,7 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
               // Report position for pointing gesture
               if (gesture === 'Pointing_Up') {
                 isPointing = true;
+                scrollStateRef.current.lastY = null; // Reset scroll when pointing
 
                 if (onHandPositionRef.current) {
                   onHandPositionRef.current(smoothed.x, smoothed.y, gesture);
@@ -190,6 +199,50 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
                     dwell.startTime = now + 500; // Prevent rapid re-triggers
                   }
                 }
+              }
+
+              // Closed fist scroll - velocity-based smooth scrolling (like serverless-llm)
+              if (gesture === 'Closed_Fist') {
+                isScrolling = true;
+                const scroll = scrollStateRef.current;
+                // Use wrist position (landmark 0) for more stable tracking
+                const wristY = hand[0].y;
+
+                // Show scroll cursor at wrist position
+                if (cursor) {
+                  const wristX = 1 - hand[0].x; // Mirror x
+                  const screenX = wristX * w;
+                  const screenY = wristY * h;
+                  cursor.style.transform = `translate(${screenX - CURSOR_SIZE / 2}px, ${screenY - CURSOR_SIZE / 2}px)`;
+                  cursor.style.opacity = '1';
+                }
+
+                if (!scroll.isScrolling) {
+                  // Starting to scroll
+                  scroll.isScrolling = true;
+                  scroll.lastY = wristY;
+                  scroll.velocity = 0;
+                } else if (scroll.lastY !== null) {
+                  const delta = wristY - scroll.lastY;
+                  // Exponential smoothing for velocity
+                  const vel = scroll.velocity * 0.6 + delta * 0.4;
+                  scroll.velocity = vel;
+
+                  // Only scroll if velocity exceeds threshold (prevents jitter)
+                  // Negate velocity for natural "drag" behavior (content follows hand)
+                  if (Math.abs(vel) > SCROLL_VELOCITY_THRESHOLD) {
+                    window.scrollBy({ top: -vel * SCROLL_MULTIPLIER, behavior: 'auto' });
+                    scroll.lastY = wristY;
+                  } else if (Math.abs(delta) > SCROLL_RESET_THRESHOLD) {
+                    // Reset position if hand moved significantly but slowly
+                    scroll.lastY = wristY;
+                  }
+                }
+              } else {
+                // Reset scroll state when not making fist
+                scrollStateRef.current.isScrolling = false;
+                scrollStateRef.current.lastY = null;
+                scrollStateRef.current.velocity = 0;
               }
 
               // Report gesture changes
@@ -247,7 +300,7 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
 
           // Update cursor visibility and dwell ring
           if (cursor) {
-            cursor.style.opacity = isPointing ? '1' : '0';
+            cursor.style.opacity = (isPointing || isScrolling) ? '1' : '0';
           }
           if (cursorRing) {
             // Update the ring progress (stroke-dashoffset)

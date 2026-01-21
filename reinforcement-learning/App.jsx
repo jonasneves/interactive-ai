@@ -3,9 +3,9 @@ import {
   Gamepad2, Network, TrendingDown, Target, GitBranch,
   Calculator, Dice5, LineChart, Swords, Gauge,
   RefreshCw, Theater, BarChart3, Search, Database,
-  Crosshair, Scissors, Trophy, Play, ChevronRight,
-  Lock, CheckCircle, ArrowLeft
+  Crosshair, Scissors, Trophy, ArrowLeft
 } from 'lucide-react';
+import { AppShell } from '../shared/components';
 
 // Import Tier 1 modules
 import RLLoopExplorer from './tier1/rl-loop-explorer';
@@ -33,11 +33,8 @@ import TargetNetwork from './tier4/target-network';
 import PPOVisualizer from './tier4/ppo-visualizer';
 import RewardShaping from './tier4/reward-shaping';
 
-const App = () => {
-  const [activeModule, setActiveModule] = useState(null);
-
-  // Module definitions
-  const tiers = [
+// Module definitions
+const tiers = [
     {
       name: 'Tier 1: Core RL Concepts',
       description: 'Build intuition for the fundamental RL framework',
@@ -212,6 +209,10 @@ const App = () => {
     },
   ];
 
+// Course content component (embeddable, no AppShell)
+export function CourseContent({ onBack }) {
+  const [activeModule, setActiveModule] = useState(null);
+
   // If a module is active, render it with a back button
   if (activeModule) {
     const module = tiers
@@ -222,15 +223,14 @@ const App = () => {
       const ModuleComponent = module.component;
       return (
         <div className="relative">
-          {/* Back button */}
           <button
             onClick={() => setActiveModule(null)}
-            className="fixed top-4 left-4 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
+            className="fixed top-4 left-20 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
                        text-white flex items-center gap-2 hover:bg-slate-700 transition-colors
                        border border-slate-700"
           >
             <ArrowLeft size={18} />
-            Back to Hub
+            Back
           </button>
           <ModuleComponent />
         </div>
@@ -240,24 +240,34 @@ const App = () => {
 
   // Render the hub
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8">
+    <div className="min-h-screen text-white p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="absolute top-4 left-20 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
+                         text-white flex items-center gap-2 hover:bg-slate-700 transition-colors
+                         border border-slate-700"
+            >
+              <ArrowLeft size={18} />
+              Home
+            </button>
+          )}
           <h1 className="text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
-              Reinforcement Learning Visualizations
+              Reinforcement Learning
             </span>
           </h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Interactive educational artifacts for building deep intuition about RL concepts
+            Interactive visualizations for building intuition about RL concepts
           </p>
         </div>
 
         {/* Tiers */}
         {tiers.map((tier, tierIndex) => (
           <div key={tierIndex} className="mb-12">
-            {/* Tier Header */}
             <div className="flex items-center gap-4 mb-6">
               <div
                 className="w-2 h-12 rounded-full"
@@ -271,7 +281,6 @@ const App = () => {
               </div>
             </div>
 
-            {/* Module Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tier.modules.map((module) => {
                 const Icon = module.icon;
@@ -289,16 +298,6 @@ const App = () => {
                           : 'bg-slate-800/20 border border-slate-800 cursor-not-allowed opacity-60'
                       }`}
                   >
-                    {/* Status Badge */}
-                    <div className="absolute top-4 right-4">
-                      {module.status === 'complete' ? (
-                        <CheckCircle size={20} className="text-green-500" />
-                      ) : (
-                        <Lock size={20} className="text-slate-600" />
-                      )}
-                    </div>
-
-                    {/* Icon */}
                     <div
                       className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
                       style={{ backgroundColor: tier.color + '20' }}
@@ -306,44 +305,27 @@ const App = () => {
                       <Icon size={24} style={{ color: tier.color }} />
                     </div>
 
-                    {/* Content */}
                     <h3 className="text-lg font-semibold mb-2 text-white group-hover:text-blue-300 transition-colors">
                       {module.name}
                     </h3>
                     <p className="text-sm text-slate-400 mb-4">{module.description}</p>
-
-                    {/* Action */}
-                    {isAvailable ? (
-                      <div className="flex items-center gap-2 text-sm font-medium" style={{ color: tier.color }}>
-                        <Play size={16} />
-                        Launch Visualization
-                        <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
-                        <Lock size={14} />
-                        Coming Soon
-                      </div>
-                    )}
                   </button>
                 );
               })}
             </div>
           </div>
         ))}
-
-        {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-slate-800 text-center">
-          <p className="text-slate-500 text-sm">
-            Open source educational project •{' '}
-            <span className="text-slate-400">18 interactive visualizations • All complete! 🎉</span>
-          </p>
-          <p className="text-slate-600 text-xs mt-2">
-            Run <code className="bg-slate-800 px-2 py-1 rounded">make help</code> for available commands
-          </p>
-        </div>
       </div>
     </div>
+  );
+}
+
+// Standalone app with AppShell wrapper
+const App = () => {
+  return (
+    <AppShell>
+      <CourseContent />
+    </AppShell>
   );
 };
 

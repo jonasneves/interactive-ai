@@ -167,7 +167,7 @@ const ExplorationStrategies = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
+    <div className="min-h-screen text-white">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Exploration Strategies Gallery</h1>
         <p className="text-slate-400 mb-6">Compare different exploration methods on a multi-armed bandit problem</p>

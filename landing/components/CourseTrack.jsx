@@ -28,9 +28,9 @@ const GamepadIcon = ({ size = 18, color = 'currentColor' }) => (
 );
 
 const COURSES = [
-  { id: 'neural-networks', label: 'Neural Networks', href: './neural-networks/', Icon: BrainIcon },
-  { id: 'convolutional-networks', label: 'CNNs', href: './convolutional-networks/', Icon: EyeIcon },
-  { id: 'reinforcement-learning', label: 'RL', href: './reinforcement-learning/', Icon: GamepadIcon }
+  { id: 'neural-networks', label: 'Neural Networks', Icon: BrainIcon },
+  { id: 'convolutional-networks', label: 'CNNs', Icon: EyeIcon },
+  { id: 'reinforcement-learning', label: 'RL', Icon: GamepadIcon }
 ];
 
 export default function CourseTrack({ activeCourse, onCourseChange, onCourseSelect }) {
@@ -41,42 +41,28 @@ export default function CourseTrack({ activeCourse, onCourseChange, onCourseSele
   const activeIndex = COURSES.findIndex(c => c.id === activeCourse);
   const safeIndex = activeIndex >= 0 ? activeIndex : 0;
 
-  // Update slider position when active course changes
-  useEffect(() => {
+  function updateSliderPosition() {
     const track = trackRef.current;
     const activeButton = buttonRefs.current[safeIndex];
     if (!track || !activeButton) return;
 
     const trackRect = track.getBoundingClientRect();
     const buttonRect = activeButton.getBoundingClientRect();
-
     setSliderStyle({
       width: buttonRect.width,
       left: buttonRect.left - trackRect.left
     });
-  }, [safeIndex, activeCourse]);
+  }
 
-  // ResizeObserver for responsive updates
   useEffect(() => {
+    updateSliderPosition();
     const track = trackRef.current;
     if (!track) return;
 
-    const observer = new ResizeObserver(() => {
-      const activeButton = buttonRefs.current[safeIndex];
-      if (!activeButton) return;
-
-      const trackRect = track.getBoundingClientRect();
-      const buttonRect = activeButton.getBoundingClientRect();
-
-      setSliderStyle({
-        width: buttonRect.width,
-        left: buttonRect.left - trackRect.left
-      });
-    });
-
+    const observer = new ResizeObserver(updateSliderPosition);
     observer.observe(track);
     return () => observer.disconnect();
-  }, [safeIndex]);
+  }, [safeIndex, activeCourse]);
 
   return (
     <div

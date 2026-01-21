@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import {
   Image, Grid3X3, Brain, Layers, Palette, Map, Minimize2,
   Target, GraduationCap, GitBranch, Building, Eye,
-  Play, ChevronRight, Lock, CheckCircle, ArrowLeft, Sparkles
+  ArrowLeft, Sparkles
 } from 'lucide-react';
+import { AppShell } from '../shared/components';
 
 // Import Foundations modules
 import PixelsAndImages from './foundations/pixels-and-images';
@@ -26,11 +27,8 @@ import Interpretability from './advanced/interpretability';
 // Import Reference
 import CNNOverview from './reference/cnn-overview';
 
-const App = () => {
-  const [activeModule, setActiveModule] = useState(null);
-
-  // Module definitions organized by tier
-  const tiers = [
+// Module definitions organized by tier
+const tiers = [
     {
       name: 'Foundations',
       description: 'Prerequisites - images, math, and basic neural networks',
@@ -165,7 +163,10 @@ const App = () => {
     },
   ];
 
-  // If a module is active, render it with a back button
+// Course content component (embeddable, no AppShell)
+export function CourseContent({ onBack }) {
+  const [activeModule, setActiveModule] = useState(null);
+
   if (activeModule) {
     const module = tiers
       .flatMap((t) => t.modules)
@@ -175,15 +176,14 @@ const App = () => {
       const ModuleComponent = module.component;
       return (
         <div className="relative">
-          {/* Back button */}
           <button
             onClick={() => setActiveModule(null)}
-            className="fixed top-4 left-4 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
+            className="fixed top-4 left-20 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
                        text-white flex items-center gap-2 hover:bg-slate-700 transition-colors
                        border border-slate-700"
           >
             <ArrowLeft size={18} />
-            Back to Hub
+            Back
           </button>
           <ModuleComponent />
         </div>
@@ -191,45 +191,33 @@ const App = () => {
     }
   }
 
-  // Calculate progress
-  const totalModules = tiers.flatMap(t => t.modules).length;
-  const completedModules = tiers.flatMap(t => t.modules).filter(m => m.status === 'complete').length;
-  const progressPercent = (completedModules / totalModules) * 100;
-
-  // Render the hub
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8">
+    <div className="min-h-screen text-white p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="absolute top-4 left-20 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
+                         text-white flex items-center gap-2 hover:bg-slate-700 transition-colors
+                         border border-slate-700"
+            >
+              <ArrowLeft size={18} />
+              Home
+            </button>
+          )}
           <h1 className="text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
-              CNN Visualizations
+              Convolutional Neural Networks
             </span>
           </h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Interactive educational artifacts for understanding Convolutional Neural Networks
+            Interactive visualizations for understanding CNNs
           </p>
-
-          {/* Progress Bar */}
-          <div className="mt-6 max-w-md mx-auto">
-            <div className="flex justify-between text-sm text-slate-400 mb-2">
-              <span>Progress</span>
-              <span>{completedModules}/{totalModules} modules</span>
-            </div>
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className="h-full progress-gradient transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Tiers */}
         {tiers.map((tier, tierIndex) => (
           <div key={tierIndex} className="mb-12">
-            {/* Tier Header */}
             <div className="flex items-center gap-4 mb-6">
               <div
                 className="w-2 h-12 rounded-full"
@@ -243,7 +231,6 @@ const App = () => {
               </div>
             </div>
 
-            {/* Module Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tier.modules.map((module) => {
                 const Icon = module.icon;
@@ -261,16 +248,6 @@ const App = () => {
                           : 'bg-slate-800/20 border border-slate-800 cursor-not-allowed opacity-60'
                       }`}
                   >
-                    {/* Status Badge */}
-                    <div className="absolute top-4 right-4">
-                      {module.status === 'complete' ? (
-                        <CheckCircle size={20} className="text-green-500" />
-                      ) : (
-                        <Lock size={20} className="text-slate-600" />
-                      )}
-                    </div>
-
-                    {/* Icon */}
                     <div
                       className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
                       style={{ backgroundColor: tier.color + '20' }}
@@ -278,44 +255,26 @@ const App = () => {
                       <Icon size={24} style={{ color: tier.color }} />
                     </div>
 
-                    {/* Content */}
                     <h3 className="text-lg font-semibold mb-2 text-white group-hover:text-blue-300 transition-colors">
                       {module.name}
                     </h3>
                     <p className="text-sm text-slate-400 mb-4">{module.description}</p>
-
-                    {/* Action */}
-                    {isAvailable ? (
-                      <div className="flex items-center gap-2 text-sm font-medium" style={{ color: tier.color }}>
-                        <Play size={16} />
-                        Launch Visualization
-                        <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
-                        <Lock size={14} />
-                        Coming Soon
-                      </div>
-                    )}
                   </button>
                 );
               })}
             </div>
           </div>
         ))}
-
-        {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-slate-800 text-center">
-          <p className="text-slate-500 text-sm">
-            Open source educational project •{' '}
-            <span className="text-slate-400">{totalModules} interactive visualizations • {completedModules} complete</span>
-          </p>
-          <p className="text-slate-600 text-xs mt-2">
-            Run <code className="bg-slate-800 px-2 py-1 rounded">make help</code> for available commands
-          </p>
-        </div>
       </div>
     </div>
+  );
+}
+
+const App = () => {
+  return (
+    <AppShell>
+      <CourseContent />
+    </AppShell>
   );
 };
 

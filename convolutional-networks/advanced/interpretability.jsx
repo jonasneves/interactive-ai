@@ -71,9 +71,9 @@ const Interpretability = () => {
       { name: 'Corner', pattern: '⌐¬' },
       { name: 'Circle', pattern: '○' },
       { name: 'Grid', pattern: '▦' },
-      { name: 'Eye-like', emoji: '👁' },
-      { name: 'Wheel-like', emoji: '◎' },
-      { name: 'Face part', emoji: '👃' },
+      { name: 'Eye-like', pattern: '◉' },
+      { name: 'Wheel-like', pattern: '◎' },
+      { name: 'Face part', pattern: '△' },
       { name: 'Fur texture', pattern: '≋≋' },
     ];
 
@@ -98,8 +98,13 @@ const Interpretability = () => {
   const SaliencyDemo = () => (
     <div className="grid grid-cols-3 gap-6">
       <div className="text-center">
-        <div className="w-32 h-32 mx-auto bg-slate-700 rounded-lg flex items-center justify-center text-6xl mb-2">
-          🐱
+        <div className="w-32 h-32 mx-auto bg-slate-700 rounded-lg flex items-center justify-center mb-2">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8" cy="9" r="2" />
+            <circle cx="16" cy="9" r="2" />
+            <path d="M9 15c1.5 1 4.5 1 6 0" />
+          </svg>
         </div>
         <p className="text-sm text-slate-400">Input Image</p>
       </div>
@@ -108,16 +113,25 @@ const Interpretability = () => {
           <div className="absolute top-4 left-8 w-8 h-4 bg-red-500/60 rounded-full blur-sm" />
           <div className="absolute top-4 right-8 w-8 h-4 bg-red-500/60 rounded-full blur-sm" />
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-6 h-3 bg-yellow-500/60 rounded-full blur-sm" />
-          <span className="text-4xl opacity-30">🐱</span>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" className="opacity-30">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8" cy="9" r="2" />
+            <circle cx="16" cy="9" r="2" />
+          </svg>
         </div>
         <p className="text-sm text-slate-400">Saliency Map</p>
       </div>
       <div className="text-center">
         <div className="w-32 h-32 mx-auto bg-slate-700 rounded-lg flex items-center justify-center mb-2 relative overflow-hidden">
-          <span className="text-6xl">🐱</span>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8" cy="9" r="2" />
+            <circle cx="16" cy="9" r="2" />
+            <path d="M9 15c1.5 1 4.5 1 6 0" />
+          </svg>
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-emerald-500/30 to-transparent" />
-          <div className="absolute top-2 left-6 text-xs bg-emerald-500/80 px-1 rounded">ears</div>
-          <div className="absolute bottom-4 text-xs bg-emerald-500/80 px-1 rounded">whiskers</div>
+          <div className="absolute top-2 left-6 text-xs bg-emerald-500/80 px-1 rounded">eyes</div>
+          <div className="absolute bottom-4 text-xs bg-emerald-500/80 px-1 rounded">mouth</div>
         </div>
         <p className="text-sm text-slate-400">Highlighted Regions</p>
       </div>
@@ -130,8 +144,8 @@ const Interpretability = () => {
       {[
         { layer: 'Conv1', features: ['─', '│', '╱', '╲'], label: 'Edges' },
         { layer: 'Conv3', features: ['◢', '◣', '⊞', '◎'], label: 'Textures' },
-        { layer: 'Conv5', features: ['👁', '👃', '🔵', '◉'], label: 'Parts' },
-        { layer: 'FC', features: ['😀', '🐕', '🚗', '🏠'], label: 'Objects' },
+        { layer: 'Conv5', features: ['◉', '△', '●', '◇'], label: 'Parts' },
+        { layer: 'FC', features: ['A', 'B', 'C', 'D'], label: 'Objects' },
       ].map((level, i) => (
         <div key={i} className="bg-slate-900 rounded-lg p-4">
           <h4 className="text-sm text-slate-400 mb-2">{level.layer}</h4>
@@ -149,7 +163,7 @@ const Interpretability = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white p-6">
+    <div className="min-h-screen text-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
