@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision';
 
 const GESTURE_COLORS = {
@@ -15,10 +15,13 @@ const GESTURE_COLORS = {
 const CURSOR_SMOOTHING = 0.4;
 const DWELL_TIME = 1200;
 const DWELL_THRESHOLD = 0.05;
+const CURSOR_SIZE = 24;
 
 export default function HandBackground({ enabled = false, onHandPosition, onGesture, onDwellClick }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const cursorRef = useRef(null);
+  const cursorRingRef = useRef(null);
   const recognizerRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(null);
@@ -97,6 +100,8 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
           if (cancelled) return;
 
           const canvas = canvasRef.current;
+          const cursor = cursorRef.current;
+          const cursorRing = cursorRingRef.current;
           const ctx = canvas?.getContext('2d');
           if (!ctx || !video.videoWidth || !recognizerRef.current) {
             rafRef.current = requestAnimationFrame(draw);
@@ -127,6 +132,10 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
 
           ctx.clearRect(0, 0, w, h);
 
+          // Hide cursor by default
+          let isPointing = false;
+          let dwellProgress = 0;
+
           if (result?.landmarks?.length) {
             for (let i = 0; i < result.landmarks.length; i++) {
               const hand = result.landmarks[i];
@@ -145,8 +154,20 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
               smoothed.y += (rawY - smoothed.y) * CURSOR_SMOOTHING;
 
               // Report position for pointing gesture
-              if (gesture === 'Pointing_Up' && onHandPositionRef.current) {
-                onHandPositionRef.current(smoothed.x, smoothed.y, gesture);
+              if (gesture === 'Pointing_Up') {
+                isPointing = true;
+
+                if (onHandPositionRef.current) {
+                  onHandPositionRef.current(smoothed.x, smoothed.y, gesture);
+                }
+
+                // Update cursor position (convert to screen coords, account for mirroring)
+                if (cursor) {
+                  const screenX = smoothed.x * w;
+                  const screenY = smoothed.y * h;
+                  cursor.style.transform = `translate(${screenX - CURSOR_SIZE / 2}px, ${screenY - CURSOR_SIZE / 2}px)`;
+                  cursor.style.opacity = '1';
+                }
 
                 // Dwell click detection
                 const dwell = dwellStateRef.current;
@@ -162,6 +183,8 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
                 } else {
                   // Check dwell time
                   const dwellDuration = now - dwell.startTime;
+                  dwellProgress = Math.min(dwellDuration / DWELL_TIME, 1);
+
                   if (dwellDuration >= DWELL_TIME && onDwellClickRef.current) {
                     onDwellClickRef.current(smoothed.x, smoothed.y);
                     dwell.startTime = now + 500; // Prevent rapid re-triggers
@@ -222,6 +245,18 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
             }
           }
 
+          // Update cursor visibility and dwell ring
+          if (cursor) {
+            cursor.style.opacity = isPointing ? '1' : '0';
+          }
+          if (cursorRing) {
+            // Update the ring progress (stroke-dashoffset)
+            const circumference = 2 * Math.PI * 14; // radius = 14
+            const offset = circumference * (1 - dwellProgress);
+            cursorRing.style.strokeDashoffset = offset.toString();
+            cursorRing.style.stroke = dwellProgress >= 1 ? '#22c55e' : '#3b82f6';
+          }
+
           rafRef.current = requestAnimationFrame(draw);
         }
 
@@ -246,23 +281,101 @@ export default function HandBackground({ enabled = false, onHandPosition, onGest
 
   if (!enabled) return null;
 
+  const circumference = 2 * Math.PI * 14;
+
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 1,
-      pointerEvents: 'none',
-      overflow: 'hidden',
-      transform: 'scaleX(-1)'
-    }}>
-      <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
-      <canvas ref={canvasRef} style={{
-        position: 'absolute',
+    <>
+      {/* Hand skeleton layer (behind content) */}
+      <div style={{
+        position: 'fixed',
         inset: 0,
-        width: '100%',
-        height: '100%',
-        opacity: 0.8
-      }} />
-    </div>
+        zIndex: 1,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        transform: 'scaleX(-1)'
+      }}>
+        <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
+        <canvas ref={canvasRef} style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          opacity: 0.8
+        }} />
+      </div>
+
+      {/* Cursor indicator (in front of content) */}
+      <div
+        ref={cursorRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: CURSOR_SIZE,
+          height: CURSOR_SIZE,
+          zIndex: 9999,
+          pointerEvents: 'none',
+          opacity: 0,
+          transition: 'opacity 0.15s ease-out'
+        }}
+      >
+        {/* Outer glow */}
+        <div style={{
+          position: 'absolute',
+          inset: -4,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+        }} />
+
+        {/* Main cursor dot */}
+        <div style={{
+          position: 'absolute',
+          inset: 4,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+          boxShadow: '0 0 12px rgba(96, 165, 250, 0.6), 0 0 24px rgba(96, 165, 250, 0.3)',
+        }} />
+
+        {/* Dwell progress ring */}
+        <svg
+          width={CURSOR_SIZE + 8}
+          height={CURSOR_SIZE + 8}
+          style={{
+            position: 'absolute',
+            top: -4,
+            left: -4,
+          }}
+        >
+          {/* Background ring */}
+          <circle
+            cx={(CURSOR_SIZE + 8) / 2}
+            cy={(CURSOR_SIZE + 8) / 2}
+            r={14}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.2)"
+            strokeWidth="3"
+          />
+          {/* Progress ring */}
+          <circle
+            ref={cursorRingRef}
+            cx={(CURSOR_SIZE + 8) / 2}
+            cy={(CURSOR_SIZE + 8) / 2}
+            r={14}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference}
+            style={{
+              transform: 'rotate(-90deg)',
+              transformOrigin: 'center',
+              transition: 'stroke 0.2s',
+              filter: 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))'
+            }}
+          />
+        </svg>
+      </div>
+    </>
   );
 }
