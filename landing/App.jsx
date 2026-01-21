@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import HandBackground from './components/HandBackground';
+import CourseTrack, { COURSES } from './components/CourseTrack';
 import auth from '../shared/auth.js';
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
@@ -82,35 +83,71 @@ function UserMenu({ user, onLogout }) {
   );
 }
 
-function Card({ href, icon, title, description }) {
+function Card({ href, icon, title, description, isHovered, cardRef }) {
   return (
     <a
+      ref={cardRef}
       href={href}
+      data-card-id={href}
       style={{
         display: 'block',
         padding: '1.5rem',
-        background: 'rgba(15, 23, 42, 0.5)',
+        background: isHovered
+          ? 'rgba(30, 41, 59, 0.7)'
+          : 'rgba(15, 23, 42, 0.5)',
         backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: isHovered
+          ? '1px solid rgba(99, 102, 241, 0.4)'
+          : '1px solid rgba(255,255,255,0.06)',
         borderRadius: 12,
         textDecoration: 'none',
         color: '#fff',
-        transition: 'all 0.2s ease'
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isHovered ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
+        boxShadow: isHovered
+          ? '0 20px 40px rgba(99, 102, 241, 0.15), 0 0 30px rgba(99, 102, 241, 0.1)'
+          : 'none'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)';
-        e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.25)';
-        e.currentTarget.style.transform = 'translateY(-2px)';
+        if (!isHovered) {
+          e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)';
+          e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(15, 23, 42, 0.5)';
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-        e.currentTarget.style.transform = 'translateY(0)';
+        if (!isHovered) {
+          e.currentTarget.style.background = 'rgba(15, 23, 42, 0.5)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }
       }}
     >
-      <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{icon}</div>
-      <div style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.375rem', color: '#f1f5f9' }}>{title}</div>
-      <div style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.5 }}>{description}</div>
+      <div style={{
+        fontSize: '2rem',
+        marginBottom: '0.75rem',
+        transition: 'transform 0.3s',
+        transform: isHovered ? 'scale(1.1)' : 'scale(1)'
+      }}>
+        {icon}
+      </div>
+      <div style={{
+        fontSize: '1.125rem',
+        fontWeight: 600,
+        marginBottom: '0.375rem',
+        color: isHovered ? '#fff' : '#f1f5f9',
+        transition: 'color 0.3s'
+      }}>
+        {title}
+      </div>
+      <div style={{
+        fontSize: '0.8125rem',
+        color: isHovered ? '#94a3b8' : '#64748b',
+        lineHeight: 1.5,
+        transition: 'color 0.3s'
+      }}>
+        {description}
+      </div>
     </a>
   );
 }
@@ -119,6 +156,10 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
+  const [activeCourse, setActiveCourse] = useState(COURSES[0].id);
+  const [hoveredCard, setHoveredCard] = useState(null);
+
+  const cardRefs = useRef({});
 
   useEffect(() => {
     async function init() {
@@ -140,6 +181,85 @@ export default function App() {
     setUser(null);
   };
 
+  // Hand position handler - detects hovering over course track and cards
+  const handleHandPosition = useCallback((x, y, gesture) => {
+    const screenX = x * window.innerWidth;
+    const screenY = y * window.innerHeight;
+
+    // Check course track for gesture navigation
+    const courseTrack = document.querySelector('[data-gesture-course-track]');
+    if (courseTrack) {
+      const rect = courseTrack.getBoundingClientRect();
+      if (screenX >= rect.left && screenX <= rect.right &&
+          screenY >= rect.top && screenY <= rect.bottom) {
+        const relativeX = (screenX - rect.left) / rect.width;
+        const courseIndex = Math.min(
+          Math.floor(relativeX * COURSES.length),
+          COURSES.length - 1
+        );
+        const targetCourse = COURSES[Math.max(0, courseIndex)];
+        if (targetCourse && targetCourse.id !== activeCourse) {
+          setActiveCourse(targetCourse.id);
+        }
+      }
+    }
+
+    // Check cards for hover effect
+    let foundCard = null;
+    for (const [id, ref] of Object.entries(cardRefs.current)) {
+      if (!ref) continue;
+      const rect = ref.getBoundingClientRect();
+      // Expand hit area slightly for better UX
+      const padding = 20;
+      if (screenX >= rect.left - padding && screenX <= rect.right + padding &&
+          screenY >= rect.top - padding && screenY <= rect.bottom + padding) {
+        foundCard = id;
+        break;
+      }
+    }
+
+    if (foundCard !== hoveredCard) {
+      setHoveredCard(foundCard);
+    }
+  }, [activeCourse, hoveredCard]);
+
+  // Dwell click handler - triggers navigation
+  const handleDwellClick = useCallback((x, y) => {
+    const screenX = x * window.innerWidth;
+    const screenY = y * window.innerHeight;
+
+    // Check if dwelling on a card
+    for (const [id, ref] of Object.entries(cardRefs.current)) {
+      if (!ref) continue;
+      const rect = ref.getBoundingClientRect();
+      if (screenX >= rect.left && screenX <= rect.right &&
+          screenY >= rect.top && screenY <= rect.bottom) {
+        // Navigate to the card's href
+        window.location.href = ref.getAttribute('href');
+        return;
+      }
+    }
+
+    // Check if dwelling on course track
+    const courseTrack = document.querySelector('[data-gesture-course-track]');
+    if (courseTrack) {
+      const rect = courseTrack.getBoundingClientRect();
+      if (screenX >= rect.left && screenX <= rect.right &&
+          screenY >= rect.top && screenY <= rect.bottom) {
+        // Navigate to active course
+        const course = COURSES.find(c => c.id === activeCourse);
+        if (course) {
+          window.location.href = course.href;
+        }
+      }
+    }
+  }, [activeCourse]);
+
+  // Course selection from track
+  const handleCourseSelect = useCallback((course) => {
+    window.location.href = course.href;
+  }, []);
+
   if (loading) {
     return (
       <div style={{
@@ -154,6 +274,30 @@ export default function App() {
     );
   }
 
+  const CARDS = [
+    {
+      id: './neural-networks/',
+      href: './neural-networks/',
+      icon: '🧠',
+      title: 'Neural Networks',
+      description: 'Backpropagation, activation functions, and gradient descent visualized.'
+    },
+    {
+      id: './convolutional-networks/',
+      href: './convolutional-networks/',
+      icon: '👁️',
+      title: 'CNNs',
+      description: 'Convolutions, kernels, pooling, and architectures explained.'
+    },
+    {
+      id: './reinforcement-learning/',
+      href: './reinforcement-learning/',
+      icon: '🎮',
+      title: 'Reinforcement Learning',
+      description: 'MDPs, value functions, Q-learning, and policy gradients.'
+    }
+  ];
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -166,7 +310,11 @@ export default function App() {
       `,
       backgroundSize: '100% 100%, 100% 100%, 100% 100%, 24px 24px'
     }}>
-      <HandBackground enabled={handTrackingEnabled} />
+      <HandBackground
+        enabled={handTrackingEnabled}
+        onHandPosition={handleHandPosition}
+        onDwellClick={handleDwellClick}
+      />
 
       {/* Header */}
       <header style={{
@@ -236,7 +384,7 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '5rem 1.5rem 4rem',
+        padding: '4rem 1.5rem 4rem',
         position: 'relative',
         zIndex: 5
       }}>
@@ -255,11 +403,30 @@ export default function App() {
         <p style={{
           fontSize: '1rem',
           color: '#475569',
-          marginBottom: '2.5rem',
+          marginBottom: '2rem',
           textAlign: 'center'
         }}>
           Educational visualizations for understanding AI
         </p>
+
+        {/* Course Track - Gesture Navigation */}
+        <div style={{ marginBottom: '2rem' }}>
+          <CourseTrack
+            activeCourse={activeCourse}
+            onCourseChange={setActiveCourse}
+            onCourseSelect={handleCourseSelect}
+          />
+          {handTrackingEnabled && (
+            <p style={{
+              fontSize: '0.75rem',
+              color: '#64748b',
+              textAlign: 'center',
+              marginTop: '0.5rem'
+            }}>
+              Point to navigate • Hold to select
+            </p>
+          )}
+        </div>
 
         {/* Hands-free CTA */}
         {!handTrackingEnabled && (
@@ -270,7 +437,7 @@ export default function App() {
               alignItems: 'center',
               gap: '0.875rem',
               padding: '0.75rem 1.25rem',
-              marginBottom: '3rem',
+              marginBottom: '2.5rem',
               background: 'rgba(59, 130, 246, 0.08)',
               border: '1px solid rgba(59, 130, 246, 0.15)',
               borderRadius: 10,
@@ -321,24 +488,17 @@ export default function App() {
           maxWidth: 880,
           width: '100%'
         }}>
-          <Card
-            href="./neural-networks/"
-            icon="🧠"
-            title="Neural Networks"
-            description="Backpropagation, activation functions, and gradient descent visualized."
-          />
-          <Card
-            href="./convolutional-networks/"
-            icon="👁️"
-            title="CNNs"
-            description="Convolutions, kernels, pooling, and architectures explained."
-          />
-          <Card
-            href="./reinforcement-learning/"
-            icon="🎮"
-            title="Reinforcement Learning"
-            description="MDPs, value functions, Q-learning, and policy gradients."
-          />
+          {CARDS.map(card => (
+            <Card
+              key={card.id}
+              cardRef={el => cardRefs.current[card.id] = el}
+              href={card.href}
+              icon={card.icon}
+              title={card.title}
+              description={card.description}
+              isHovered={handTrackingEnabled && hoveredCard === card.id}
+            />
+          ))}
         </div>
 
         {/* Login prompt */}

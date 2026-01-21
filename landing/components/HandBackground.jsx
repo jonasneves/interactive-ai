@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision';
 
 const GESTURE_COLORS = {
@@ -12,13 +12,39 @@ const GESTURE_COLORS = {
   'default': { color: '#3b82f6', glow: '#60a5fa' }
 };
 
-export default function HandBackground({ enabled = false }) {
+const CURSOR_SMOOTHING = 0.4;
+const DWELL_TIME = 1200;
+const DWELL_THRESHOLD = 0.05;
+
+export default function HandBackground({ enabled = false, onHandPosition, onGesture, onDwellClick }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const recognizerRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(null);
   const lastTimeRef = useRef(-1);
+
+  // Refs for callbacks to avoid stale closures
+  const onHandPositionRef = useRef(onHandPosition);
+  const onGestureRef = useRef(onGesture);
+  const onDwellClickRef = useRef(onDwellClick);
+
+  // Smoothed cursor position
+  const smoothedPosRef = useRef({ x: 0.5, y: 0.5 });
+
+  // Dwell state
+  const dwellStateRef = useRef({
+    position: { x: 0.5, y: 0.5 },
+    startTime: 0,
+    lastGesture: null
+  });
+
+  // Update refs when props change
+  useEffect(() => {
+    onHandPositionRef.current = onHandPosition;
+    onGestureRef.current = onGesture;
+    onDwellClickRef.current = onDwellClick;
+  }, [onHandPosition, onGesture, onDwellClick]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -107,6 +133,51 @@ export default function HandBackground({ enabled = false }) {
               const gesture = result.gestures?.[i]?.[0]?.categoryName;
               const colors = GESTURE_COLORS[gesture] || GESTURE_COLORS.default;
 
+              // Get index finger tip (landmark 8) for pointing
+              const indexTip = hand[8];
+              // Mirror the x coordinate since video is mirrored
+              const rawX = 1 - indexTip.x;
+              const rawY = indexTip.y;
+
+              // Smooth the position
+              const smoothed = smoothedPosRef.current;
+              smoothed.x += (rawX - smoothed.x) * CURSOR_SMOOTHING;
+              smoothed.y += (rawY - smoothed.y) * CURSOR_SMOOTHING;
+
+              // Report position for pointing gesture
+              if (gesture === 'Pointing_Up' && onHandPositionRef.current) {
+                onHandPositionRef.current(smoothed.x, smoothed.y, gesture);
+
+                // Dwell click detection
+                const dwell = dwellStateRef.current;
+                const dist = Math.sqrt(
+                  Math.pow(smoothed.x - dwell.position.x, 2) +
+                  Math.pow(smoothed.y - dwell.position.y, 2)
+                );
+
+                if (dist > DWELL_THRESHOLD) {
+                  // Hand moved, reset dwell
+                  dwell.position = { x: smoothed.x, y: smoothed.y };
+                  dwell.startTime = now;
+                } else {
+                  // Check dwell time
+                  const dwellDuration = now - dwell.startTime;
+                  if (dwellDuration >= DWELL_TIME && onDwellClickRef.current) {
+                    onDwellClickRef.current(smoothed.x, smoothed.y);
+                    dwell.startTime = now + 500; // Prevent rapid re-triggers
+                  }
+                }
+              }
+
+              // Report gesture changes
+              if (gesture && gesture !== dwellStateRef.current.lastGesture) {
+                dwellStateRef.current.lastGesture = gesture;
+                if (onGestureRef.current) {
+                  onGestureRef.current(gesture, smoothed.x, smoothed.y);
+                }
+              }
+
+              // Draw hand skeleton
               const conns = [
                 [0,1],[1,2],[2,3],[3,4],
                 [0,5],[5,6],[6,7],[7,8],
