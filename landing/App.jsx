@@ -2,14 +2,12 @@ import { useState, useCallback } from 'react';
 import { HandBackground } from '../shared/components';
 import CourseTrack, { COURSES } from './components/CourseTrack';
 
-// Import course content components
 import { CourseContent as NeuralNetworksContent } from '../neural-networks/App';
 import { CourseContent as CNNContent } from '../convolutional-networks/App';
 import { CourseContent as RLContent } from '../reinforcement-learning/App';
 
 const GESTURE_STORAGE_KEY = 'interactive-ai-gestures-enabled';
 
-// Map course IDs to their content components
 const COURSE_COMPONENTS = {
   'neural-networks': NeuralNetworksContent,
   'convolutional-networks': CNNContent,
@@ -48,125 +46,26 @@ function HandIcon({ size = 18 }) {
   );
 }
 
-function GestureHint({ onClick, isEnabled }) {
+function HomeIcon({ size = 18 }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '1.5rem',
-        padding: '2.5rem 3rem',
-        background: isEnabled
-          ? 'rgba(59, 130, 246, 0.1)'
-          : 'rgba(15, 23, 42, 0.4)',
-        backdropFilter: 'blur(12px)',
-        border: isEnabled
-          ? '1px solid rgba(59, 130, 246, 0.3)'
-          : '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 16,
-        cursor: 'pointer',
-        transition: 'all 0.3s',
-        maxWidth: 400
-      }}
-    >
-      <div style={{
-        width: 80,
-        height: 80,
-        borderRadius: '50%',
-        background: isEnabled
-          ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3))'
-          : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.3s'
-      }}>
-        <HandIcon size={36} />
-      </div>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{
-          fontSize: '1.25rem',
-          fontWeight: 600,
-          color: isEnabled ? '#60a5fa' : '#e2e8f0',
-          marginBottom: '0.5rem'
-        }}>
-          {isEnabled ? 'Gesture Control Active' : 'Hands-Free Experience'}
-        </div>
-        <div style={{
-          fontSize: '0.875rem',
-          color: '#64748b',
-          lineHeight: 1.6
-        }}>
-          {isEnabled
-            ? 'Move your hand to navigate. Hold still to select.'
-            : 'Navigate using hand gestures. Click to enable your camera.'}
-        </div>
-      </div>
-      {!isEnabled && (
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.625rem 1.25rem',
-          background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-          borderRadius: 8,
-          color: '#fff',
-          fontSize: '0.875rem',
-          fontWeight: 500
-        }}>
-          <HandIcon size={16} />
-          Enable Gestures
-        </div>
-      )}
-    </button>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
   );
 }
 
-// Home view content
-function HomeContent({ handTrackingEnabled, setHandTrackingEnabled }) {
+function HomeContent() {
   return (
-    <main style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: '5rem 1.5rem 4rem',
-      position: 'relative',
-      zIndex: 5
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        marginBottom: '1rem'
-      }}>
-        <BotIcon size={72} color="#64748b" />
-      </div>
-      <h1 style={{
-        fontSize: 'clamp(2rem, 6vw, 3rem)',
-        fontWeight: 700,
-        marginBottom: '0.5rem',
-        background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-        letterSpacing: '-0.02em'
-      }}>
-        InteractiveAI
-      </h1>
-      <p style={{
-        fontSize: '1rem',
-        color: '#475569',
-        marginBottom: '2rem',
-        textAlign: 'center'
-      }}>
+    <main className="home-content">
+      <BotIcon size={64} color="#475569" />
+      <h1 className="home-title">InteractiveAI</h1>
+      <p className="home-subtitle">
         Educational visualizations for understanding AI
       </p>
-
-      <GestureHint
-        onClick={() => setHandTrackingEnabled(!handTrackingEnabled)}
-        isEnabled={handTrackingEnabled}
-      />
+      <p className="home-hint">
+        Select a course above to begin
+      </p>
     </main>
   );
 }
@@ -184,191 +83,79 @@ export default function App() {
     } catch {}
   }, [handTrackingEnabled]);
 
-  // Hand position handler - detects hovering over course track
-  const handleHandPosition = useCallback((x, y, gesture) => {
+  function getCourseFromPosition(x, y) {
     const screenX = x * window.innerWidth;
     const screenY = y * window.innerHeight;
-
     const el = document.elementFromPoint(screenX, screenY);
-
-    if (el) {
-      const courseTrack = el.closest('[data-gesture-course-track]');
-      if (courseTrack) {
-        const rect = courseTrack.getBoundingClientRect();
-        const relativeX = (screenX - rect.left) / rect.width;
-        const courseIndex = Math.min(
-          Math.floor(relativeX * COURSES.length),
-          COURSES.length - 1
-        );
-        const targetCourse = COURSES[Math.max(0, courseIndex)];
-        if (targetCourse) {
-          setHoveredCourse(targetCourse.id);
-        }
-      }
-    }
-  }, []);
-
-  // Dwell click handler - selects course
-  const handleDwellClick = useCallback((x, y) => {
-    const screenX = x * window.innerWidth;
-    const screenY = y * window.innerHeight;
-
-    const el = document.elementFromPoint(screenX, screenY);
-    if (!el) return;
+    if (!el) return null;
 
     const courseTrack = el.closest('[data-gesture-course-track]');
-    if (courseTrack) {
-      const rect = courseTrack.getBoundingClientRect();
-      const relativeX = (screenX - rect.left) / rect.width;
-      const courseIndex = Math.min(
-        Math.floor(relativeX * COURSES.length),
-        COURSES.length - 1
-      );
-      const targetCourse = COURSES[Math.max(0, courseIndex)];
-      if (targetCourse) {
-        setSelectedCourse(targetCourse.id);
-      }
-    }
+    if (!courseTrack) return null;
+
+    const rect = courseTrack.getBoundingClientRect();
+    const relativeX = (screenX - rect.left) / rect.width;
+    const courseIndex = Math.max(0, Math.min(
+      Math.floor(relativeX * COURSES.length),
+      COURSES.length - 1
+    ));
+    return COURSES[courseIndex];
+  }
+
+  const handleHandPosition = useCallback((x, y) => {
+    const course = getCourseFromPosition(x, y);
+    if (course) setHoveredCourse(course.id);
   }, []);
 
-  // Get the active course component
+  const handleDwellClick = useCallback((x, y) => {
+    const course = getCourseFromPosition(x, y);
+    if (course) setSelectedCourse(course.id);
+  }, []);
+
   const CourseComponent = selectedCourse ? COURSE_COMPONENTS[selectedCourse] : null;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#0f172a',
-      backgroundImage: `
-        radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-        radial-gradient(at 80% 20%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
-        radial-gradient(at 40% 80%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
-        radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 100% 100%, 20px 20px'
-    }}>
+    <div className="app-container">
       <HandBackground
         enabled={handTrackingEnabled}
         onHandPosition={handleHandPosition}
         onDwellClick={handleDwellClick}
       />
 
-      {/* Header */}
-      <header style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1rem 1.5rem',
-        zIndex: 50,
-        pointerEvents: 'none'
-      }}>
-        {/* Left: Gesture toggle */}
-        <div style={{ pointerEvents: 'auto', position: 'relative' }}>
+      <header className="app-header">
+        <div className="header-left">
           <button
             onClick={() => setHandTrackingEnabled(!handTrackingEnabled)}
-            style={{
-              position: 'relative',
-              width: 42,
-              height: 42,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: handTrackingEnabled
-                ? '1px solid rgba(59, 130, 246, 0.5)'
-                : '1px solid rgba(71, 85, 105, 0.5)',
-              background: handTrackingEnabled
-                ? 'rgba(59, 130, 246, 0.2)'
-                : 'rgba(30, 41, 59, 0.5)',
-              color: handTrackingEnabled ? '#60a5fa' : '#94a3b8',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
+            className={`gesture-toggle ${handTrackingEnabled ? 'active' : ''}`}
             title={handTrackingEnabled ? 'Disable gestures' : 'Enable gestures'}
           >
             <HandIcon size={18} />
           </button>
-          {handTrackingEnabled && (
-            <button
-              onClick={() => setHandTrackingEnabled(false)}
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                marginTop: 4,
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(239, 68, 68, 0.2)',
-                border: '1px solid rgba(239, 68, 68, 0.5)',
-                color: '#f87171',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                padding: 0
-              }}
-              title="Disable gestures"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-          )}
         </div>
 
-        {/* Center: Course Track */}
-        <div style={{ pointerEvents: 'auto' }}>
-          <CourseTrack
-            activeCourse={selectedCourse || hoveredCourse}
-            onCourseChange={setHoveredCourse}
-            onCourseSelect={(course) => setSelectedCourse(course.id)}
-          />
-        </div>
+        <CourseTrack
+          activeCourse={selectedCourse || hoveredCourse}
+          onCourseChange={setHoveredCourse}
+          onCourseSelect={(course) => setSelectedCourse(course.id)}
+        />
 
-        {/* Right: Home button (when course is selected) */}
-        <div style={{ width: 42, pointerEvents: 'auto' }}>
+        <div className="header-right">
           {selectedCourse && (
             <button
               onClick={() => setSelectedCourse(null)}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid rgba(71, 85, 105, 0.5)',
-                background: 'rgba(30, 41, 59, 0.5)',
-                color: '#94a3b8',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
+              className="home-button"
               title="Back to Home"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
+              <HomeIcon size={18} />
             </button>
           )}
         </div>
       </header>
 
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 5, paddingTop: selectedCourse ? '4rem' : 0 }}>
+      <div className="app-content">
         {CourseComponent ? (
           <CourseComponent onBack={() => setSelectedCourse(null)} />
         ) : (
-          <HomeContent
-            handTrackingEnabled={handTrackingEnabled}
-            setHandTrackingEnabled={setHandTrackingEnabled}
-          />
+          <HomeContent />
         )}
       </div>
     </div>

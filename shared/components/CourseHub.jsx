@@ -1,112 +1,8 @@
-import React, { useState } from 'react';
-import {
-  Brain, Zap, Mountain, TrendingDown, Layers, GitBranch,
-  Play, ChevronRight, Lock, CheckCircle, ArrowLeft
-} from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Play, ChevronRight, Lock, CheckCircle } from 'lucide-react';
 
-// Import Tier 1 modules
-import NeuronAnatomyExplorer from './tier1/neuron-anatomy';
-import ActivationFunctionPlayground from './tier1/activation-playground';
-import LossLandscapeNavigator from './tier1/loss-landscape';
-import BackpropFlowViz from './backprop-flow';
-
-// Import Tier 2 modules
-import LearningRateLab from './tier2/learning-rate-lab';
-import BatchVsSGD from './tier2/batch-vs-sgd';
-import OptimizerZoo from './tier2/optimizer-zoo';
-
-export function CourseContent({ onBack }) {
-  return <App onBack={onBack} />;
-}
-
-const App = ({ onBack }) => {
+export default function CourseHub({ title, subtitle, gradientColors, tiers, onBack }) {
   const [activeModule, setActiveModule] = useState(null);
-
-  // Module definitions
-  const tiers = [
-    {
-      name: 'Tier 1: Foundation Concepts',
-      description: 'Build intuition for the basic building blocks',
-      color: '#3b82f6',
-      modules: [
-        {
-          id: 'neuron',
-          name: 'Neuron Anatomy Explorer',
-          description: 'Understand how a single artificial neuron computes its output',
-          icon: Brain,
-          status: 'complete',
-          component: NeuronAnatomyExplorer,
-        },
-        {
-          id: 'activation',
-          name: 'Activation Function Playground',
-          description: 'Compare activation functions and their derivatives',
-          icon: Zap,
-          status: 'complete',
-          component: ActivationFunctionPlayground,
-        },
-        {
-          id: 'landscape',
-          name: 'Loss Landscape Navigator',
-          description: 'Visualize gradient descent as navigating a loss surface',
-          icon: Mountain,
-          status: 'complete',
-          component: LossLandscapeNavigator,
-        },
-      ],
-    },
-    {
-      name: 'Tier 2: Training Dynamics',
-      description: 'Understand how neural networks learn',
-      color: '#8b5cf6',
-      modules: [
-        {
-          id: 'lr',
-          name: 'Learning Rate Lab',
-          description: 'See why learning rate choice matters',
-          icon: TrendingDown,
-          status: 'complete',
-          component: LearningRateLab,
-        },
-        {
-          id: 'sgd',
-          name: 'Batch vs SGD Visualizer',
-          description: 'Compare gradient descent variants',
-          icon: Layers,
-          status: 'complete',
-          component: BatchVsSGD,
-        },
-        {
-          id: 'optimizer',
-          name: 'Optimizer Zoo',
-          description: 'Understand momentum, RMSprop, Adam',
-          icon: GitBranch,
-          status: 'complete',
-          component: OptimizerZoo,
-        },
-      ],
-    },
-    {
-      name: 'Reference',
-      description: 'Original visualization',
-      color: '#22c55e',
-      modules: [
-        {
-          id: 'backprop',
-          name: 'Backpropagation Flow',
-          description: 'Step-by-step gradient flow through the network',
-          icon: GitBranch,
-          status: 'complete',
-          component: BackpropFlowViz,
-        },
-      ],
-    },
-  ];
-
-  // Calculate progress
-  const totalModules = tiers.flatMap(t => t.modules).length;
-  const completedModules = tiers.flatMap(t => t.modules).filter(m => m.status === 'complete').length;
-  const progressPercent = (completedModules / totalModules) * 100;
 
   // If a module is active, render it with a back button
   if (activeModule) {
@@ -114,14 +10,14 @@ const App = ({ onBack }) => {
       .flatMap((t) => t.modules)
       .find((m) => m.id === activeModule);
 
-    if (module && module.component) {
+    if (module?.component) {
       const ModuleComponent = module.component;
       return (
         <div className="relative">
-          {/* Back button */}
+          {/* Back button - positioned to not overlap with AppShell home button */}
           <button
             onClick={() => setActiveModule(null)}
-            className="fixed top-4 left-4 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
+            className="fixed top-4 left-20 z-50 px-4 py-2 bg-slate-800/90 backdrop-blur rounded-lg
                        text-white flex items-center gap-2 hover:bg-slate-700 transition-colors
                        border border-slate-700"
           >
@@ -134,31 +30,31 @@ const App = ({ onBack }) => {
     }
   }
 
-  // Render the hub
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Back to landing button if onBack provided */}
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="mb-6 px-4 py-2 bg-slate-800/50 hover:bg-slate-700 rounded-lg
-                       text-slate-300 flex items-center gap-2 transition-colors border border-slate-700"
-          >
-            <ArrowLeft size={18} />
-            Back to Courses
-          </button>
-        )}
+  // Calculate progress
+  const totalModules = tiers.flatMap(t => t.modules).length;
+  const completedModules = tiers.flatMap(t => t.modules).filter(m => m.status === 'complete').length;
+  const progressPercent = (completedModules / totalModules) * 100;
 
+  // Build gradient style for title
+  const gradientStyle = {
+    backgroundImage: `linear-gradient(to right, ${gradientColors.join(', ')})`,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
+  };
+
+  return (
+    <div className="min-h-screen text-white p-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
-              Neural Network Visualizations
+            <span style={gradientStyle}>
+              {title}
             </span>
           </h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Interactive educational artifacts for building deep intuition about neural networks
+            {subtitle}
           </p>
 
           {/* Progress Bar */}
@@ -169,7 +65,7 @@ const App = ({ onBack }) => {
             </div>
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 transition-all duration-500"
+                className="h-full progress-gradient transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -207,7 +103,7 @@ const App = ({ onBack }) => {
                     className={`group relative p-6 rounded-xl text-left transition-all duration-300
                       ${
                         isAvailable
-                          ? 'bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 cursor-pointer hover:scale-[1.02] hover:shadow-xl'
+                          ? 'bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 cursor-pointer card-hover'
                           : 'bg-slate-800/20 border border-slate-800 cursor-not-allowed opacity-60'
                       }`}
                   >
@@ -264,6 +160,4 @@ const App = ({ onBack }) => {
       </div>
     </div>
   );
-};
-
-export default App;
+}

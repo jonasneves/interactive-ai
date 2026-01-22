@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 
-// Lucide-style icons
 const BrainIcon = ({ size = 18, color = 'currentColor' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
@@ -35,61 +34,60 @@ const COURSES = [
 
 export default function CourseTrack({ activeCourse, onCourseChange, onCourseSelect }) {
   const trackRef = useRef(null);
-  const buttonRefs = useRef([]);
-  const [sliderStyle, setSliderStyle] = useState({ width: 0, left: 0 });
+  const [sliderWidth, setSliderWidth] = useState(null);
+  const [sliderLeft, setSliderLeft] = useState(null);
 
   const activeIndex = COURSES.findIndex(c => c.id === activeCourse);
   const safeIndex = activeIndex >= 0 ? activeIndex : 0;
 
-  function updateSliderPosition() {
-    const track = trackRef.current;
-    const activeButton = buttonRefs.current[safeIndex];
-    if (!track || !activeButton) return;
-
-    const trackRect = track.getBoundingClientRect();
-    const buttonRect = activeButton.getBoundingClientRect();
-    setSliderStyle({
-      width: buttonRect.width,
-      left: buttonRect.left - trackRect.left
-    });
-  }
-
   useEffect(() => {
-    updateSliderPosition();
-    const track = trackRef.current;
-    if (!track) return;
+    if (!trackRef.current) return;
 
-    const observer = new ResizeObserver(updateSliderPosition);
-    observer.observe(track);
-    return () => observer.disconnect();
-  }, [safeIndex, activeCourse]);
+    const updateSliderPosition = () => {
+      const track = trackRef.current;
+      if (!track) return;
+
+      const buttons = track.querySelectorAll('button[role="radio"]');
+      if (buttons.length === 0 || safeIndex >= buttons.length) return;
+
+      const activeButton = buttons[safeIndex];
+      const buttonRect = activeButton.getBoundingClientRect();
+      const trackRect = track.getBoundingClientRect();
+
+      setSliderWidth(buttonRect.width);
+      setSliderLeft(buttonRect.left - trackRect.left);
+    };
+
+    // Small delay to ensure DOM is updated
+    const timeoutId = setTimeout(updateSliderPosition, 0);
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(updateSliderPosition, 0);
+    });
+    resizeObserver.observe(trackRef.current);
+
+    window.addEventListener('resize', updateSliderPosition);
+
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateSliderPosition);
+    };
+  }, [safeIndex]);
 
   return (
     <div
       ref={trackRef}
+      role="radiogroup"
       data-gesture-course-track="true"
-      style={{
-        position: 'relative',
-        display: 'flex',
-        padding: 4,
-        borderRadius: 12,
-        background: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)'
-      }}
+      className="course-track"
     >
       {/* Sliding indicator */}
       <div
+        className="course-slider"
         style={{
-          position: 'absolute',
-          top: 4,
-          bottom: 4,
-          borderRadius: 8,
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(139, 92, 246, 0.4))',
-          border: '1px solid rgba(99, 102, 241, 0.3)',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          width: sliderStyle.width || 'auto',
-          left: sliderStyle.left || 0
+          width: sliderWidth !== null ? sliderWidth : `calc((100% - 8px) / ${COURSES.length})`,
+          left: sliderLeft !== null ? sliderLeft : `calc(4px + (100% - 8px) * ${safeIndex} / ${COURSES.length})`
         }}
       />
 
@@ -98,26 +96,11 @@ export default function CourseTrack({ activeCourse, onCourseChange, onCourseSele
         return (
           <button
             key={course.id}
-            ref={el => buttonRefs.current[index] = el}
+            role="radio"
+            aria-checked={isActive}
             onClick={() => onCourseSelect?.(course)}
             onMouseEnter={() => onCourseChange?.(course.id)}
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.625rem 1rem',
-              background: 'transparent',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-              color: isActive ? '#fff' : '#94a3b8',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              transition: 'color 0.2s',
-              whiteSpace: 'nowrap'
-            }}
+            className={`course-button ${isActive ? 'active' : ''}`}
           >
             <course.Icon size={16} color={isActive ? '#fff' : '#94a3b8'} />
             <span>{course.label}</span>

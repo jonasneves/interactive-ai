@@ -119,7 +119,7 @@ const BackpropFlowViz = () => {
   };
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Backpropagation Flow</h1>
         <p className="text-gray-300 mb-6">Step-by-step gradient flow through the network</p>

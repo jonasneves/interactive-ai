@@ -10,16 +10,29 @@
     "reinforcement-learning"
   ],
   "scripts": {
+    "dev": "npm run dev --workspace=landing",
     "dev:landing": "npm run dev --workspace=landing",
     "dev:nn": "npm run dev --workspace=neural-networks",
     "dev:cnn": "npm run dev --workspace=convolutional-networks",
     "dev:rl": "npm run dev --workspace=reinforcement-learning",
+    "build": "npm run build --workspaces",
     "build:landing": "npm run build --workspace=landing",
     "build:nn": "npm run build --workspace=neural-networks",
     "build:cnn": "npm run build --workspace=convolutional-networks",
-    "build:rl": "npm run build --workspace=reinforcement-learning",
-    "build:all": "npm run build:landing && npm run build:nn && npm run build:cnn && npm run build:rl",
-    "install:all": "npm install"
+    "build:rl": "npm run build --workspace=reinforcement-learning"
+  },
+  "dependencies": {
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "vite": "^6.3.5"
   },
   "keywords": [
     "ai",
@@ -31,6 +44,6 @@
     "education",
     "interactive"
   ],
-  "author": "",
+  "author": "Jonas",
   "license": "MIT"
 }
