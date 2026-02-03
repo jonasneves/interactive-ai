@@ -7,7 +7,7 @@ const GESTURE_STORAGE_KEY = 'interactive-ai-gestures-enabled';
 // Map course IDs to their dev ports and paths
 const COURSE_URLS = {
   'neural-networks': {
-    dev: 'http://localhost:3000',
+    dev: 'http://localhost:3003',
     prod: './neural-networks/index.html'
   },
   'convolutional-networks': {

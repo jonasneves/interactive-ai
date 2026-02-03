@@ -13,7 +13,13 @@ install:
 	npm install
 
 dev:
-	npm run dev
+	@echo "Starting all dev servers..."
+	@echo "Landing:                http://localhost:3000"
+	@echo "Neural Networks:        http://localhost:3003"
+	@echo "Reinforcement Learning: http://localhost:3001"
+	@echo "Convolutional Networks: http://localhost:3002"
+	@echo ""
+	npm run dev:landing & npm run dev:nn & npm run dev:rl & npm run dev:cnn & wait
 
 dev-nn:
 	npm run dev:nn
