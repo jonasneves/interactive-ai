@@ -2,16 +2,22 @@ import { useState, useCallback } from 'react';
 import { HandBackground } from '../shared/components';
 import CourseTrack, { COURSES } from './components/CourseTrack';
 
-import { CourseContent as NeuralNetworksContent } from '../neural-networks/App';
-import { CourseContent as CNNContent } from '../convolutional-networks/App';
-import { CourseContent as RLContent } from '../reinforcement-learning/App';
-
 const GESTURE_STORAGE_KEY = 'interactive-ai-gestures-enabled';
 
-const COURSE_COMPONENTS = {
-  'neural-networks': NeuralNetworksContent,
-  'convolutional-networks': CNNContent,
-  'reinforcement-learning': RLContent
+// Map course IDs to their dev ports and paths
+const COURSE_URLS = {
+  'neural-networks': {
+    dev: 'http://localhost:3000',
+    prod: './neural-networks/index.html'
+  },
+  'convolutional-networks': {
+    dev: 'http://localhost:3002',
+    prod: './convolutional-networks/index.html'
+  },
+  'reinforcement-learning': {
+    dev: 'http://localhost:3001',
+    prod: './reinforcement-learning/index.html'
+  }
 };
 
 function BotIcon({ size = 24, color = '#64748b' }) {
@@ -46,15 +52,6 @@ function HandIcon({ size = 18 }) {
   );
 }
 
-function HomeIcon({ size = 18 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
 function HomeContent() {
   return (
     <main className="home-content">
@@ -73,7 +70,6 @@ function HomeContent() {
 export default function App() {
   const [handTrackingEnabled, setHandTrackingEnabledState] = useState(getPersistedGestureState);
   const [hoveredCourse, setHoveredCourse] = useState(COURSES[0].id);
-  const [selectedCourse, setSelectedCourse] = useState(null);
 
   const setHandTrackingEnabled = useCallback((value) => {
     const newValue = typeof value === 'function' ? value(handTrackingEnabled) : value;
@@ -108,10 +104,18 @@ export default function App() {
 
   const handleDwellClick = useCallback((x, y) => {
     const course = getCourseFromPosition(x, y);
-    if (course) setSelectedCourse(course.id);
+    if (course) {
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const url = isDev ? COURSE_URLS[course.id].dev : COURSE_URLS[course.id].prod;
+      window.location.href = url;
+    }
   }, []);
 
-  const CourseComponent = selectedCourse ? COURSE_COMPONENTS[selectedCourse] : null;
+  const handleCourseSelect = (course) => {
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const url = isDev ? COURSE_URLS[course.id].dev : COURSE_URLS[course.id].prod;
+    window.location.href = url;
+  };
 
   return (
     <div className="app-container">
@@ -133,30 +137,16 @@ export default function App() {
         </div>
 
         <CourseTrack
-          activeCourse={selectedCourse || hoveredCourse}
+          activeCourse={hoveredCourse}
           onCourseChange={setHoveredCourse}
-          onCourseSelect={(course) => setSelectedCourse(course.id)}
+          onCourseSelect={handleCourseSelect}
         />
 
-        <div className="header-right">
-          {selectedCourse && (
-            <button
-              onClick={() => setSelectedCourse(null)}
-              className="home-button"
-              title="Back to Home"
-            >
-              <HomeIcon size={18} />
-            </button>
-          )}
-        </div>
+        <div className="header-right" />
       </header>
 
       <div className="app-content">
-        {CourseComponent ? (
-          <CourseComponent onBack={() => setSelectedCourse(null)} />
-        ) : (
-          <HomeContent />
-        )}
+        <HomeContent />
       </div>
     </div>
   );

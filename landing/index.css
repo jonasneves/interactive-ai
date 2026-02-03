@@ -1,12 +1,5 @@
 @import "tailwindcss";
-@source "../shared/**/*.jsx";
-@source "../shared/**/*.js";
-@source "../neural-networks/**/*.jsx";
-@source "../neural-networks/**/*.js";
-@source "../convolutional-networks/**/*.jsx";
-@source "../convolutional-networks/**/*.js";
-@source "../reinforcement-learning/**/*.jsx";
-@source "../reinforcement-learning/**/*.js";
+@source "../shared/components/HandBackground.jsx";
 
 /* View Transitions API */
 @view-transition {
