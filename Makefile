@@ -1,13 +1,22 @@
+.DEFAULT_GOAL := help
+
 .PHONY: help install dev dev-nn dev-cnn dev-rl build clean
 
 help:
-	@echo "make install   Install all dependencies"
-	@echo "make dev       Start landing dev server"
-	@echo "make dev-nn    Start neural-networks dev server"
-	@echo "make dev-cnn   Start convolutional-networks dev server"
-	@echo "make dev-rl    Start reinforcement-learning dev server"
-	@echo "make build     Build all projects"
-	@echo "make clean     Remove build artifacts"
+	@echo ""
+	@echo "\033[2mSetup\033[0m"
+	@echo "  \033[36minstall\033[0m    Install all dependencies"
+	@echo ""
+	@echo "\033[2mDev\033[0m"
+	@echo "  \033[36mdev\033[0m        Start all dev servers"
+	@echo "  \033[36mdev-nn\033[0m     Start neural-networks dev server"
+	@echo "  \033[36mdev-cnn\033[0m    Start convolutional-networks dev server"
+	@echo "  \033[36mdev-rl\033[0m     Start reinforcement-learning dev server"
+	@echo ""
+	@echo "\033[2mBuild\033[0m"
+	@echo "  \033[36mbuild\033[0m      Build all projects"
+	@echo "  \033[36mclean\033[0m      Remove build artifacts"
+	@echo ""
 
 install:
 	npm install
