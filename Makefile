@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := dev
 
 .PHONY: help install dev dev-nn dev-cnn dev-rl build clean
 
